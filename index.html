@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compartilha Livros</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f5f0; margin: 0; color: #333; }
+  header { background: #356b55; color: white; padding: 22px 15px; text-align: center; }
+  header h1 { margin: 0 0 8px; }
+  main { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+  section { background: white; padding: 18px; margin-bottom: 18px; border: 1px solid #ddd; border-radius: 6px; }
+  h2 { font-size: 21px; margin-top: 0; }
+  input, select { width: 100%; padding: 10px; margin: 5px 0 12px; box-sizing: border-box; font-size: 16px; }
+  label { display: block; font-weight: bold; }
+  button, .botao { display: inline-block; background: #356b55; color: white; padding: 10px 13px; border: 0; border-radius: 4px; text-decoration: none; cursor: pointer; font-size: 15px; }
+  .livro { border-bottom: 1px solid #ddd; padding: 13px 0; }
+  .livro:last-child { border-bottom: 0; }
+  .livro h3 { margin: 0 0 6px; font-size: 18px; }
+  .livro p { margin: 5px 0 12px; }
+  .nota { color: #666; font-size: 14px; }
+  footer { text-align: center; padding: 15px; color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Compartilha Livros</h1>
+  <p>Empréstimo e troca de livros em Capanema - PR</p>
+</header>
+<main>
+  <section>
+    <h2>Livros disponíveis</h2>
+    <label for="pesquisa">Pesquisar livro</label>
+    <input id="pesquisa" placeholder="Digite o nome do livro" oninput="mostrarLivros()">
+    <div id="lista"></div>
+  </section>
+  <section>
+    <h2>Como funciona?</h2>
+    <p>Escolha um livro e clique em "Conversar no WhatsApp". Você combina a retirada e, no caso de empréstimo, a devolução diretamente com o responsável.</p>
+    <p>O uso é gratuito. Cuide dos livros e respeite os combinados.</p>
+  </section>
+  <section>
+    <h2>Cadastrar um livro</h2>
+    <form id="cadastro">
+      <label for="nomeLivro">Nome do livro</label>
+      <input id="nomeLivro" required maxlength="100">
+      <label for="nomePessoa">Seu nome</label>
+      <input id="nomePessoa" required maxlength="60">
+      <label for="telefone">WhatsApp com DDD</label>
+      <input id="telefone" type="tel" required placeholder="46999999999">
+      <label for="tipo">Disponível para</label>
+      <select id="tipo"><option>Empréstimo</option><option>Troca</option></select>
+      <button type="submit">Adicionar livro</button>
+    </form>
+    <p id="mensagem" class="nota"></p>
+    <p class="nota">Os novos livros ficam salvos somente neste navegador e não aparecem para outras pessoas.</p>
+  </section>
+</main>
+<footer>Projeto acadêmico - Atividade Extensionista II - UNINTER</footer>
+<script>
+// Livros iniciais do projeto
+const livrosIniciais = [
+  { titulo: 'Mentes Inquietas', pessoa: 'Ana Flavia Ruiz', telefone: '46991269292', tipo: 'Empréstimo' },
+  { titulo: 'O Reizinho Autista', pessoa: 'Ana Flavia Ruiz', telefone: '46991269292', tipo: 'Empréstimo' },
+  { titulo: 'Pai Rico, Pai Pobre', pessoa: 'Tarlan Marcos Dalla Vecchia', telefone: '46999141916', tipo: 'Troca' },
+  { titulo: 'De Volta ao Mosteiro', pessoa: 'Tarlan Marcos Dalla Vecchia', telefone: '46999141916', tipo: 'Empréstimo' },
+  { titulo: 'O Monge e o Executivo', pessoa: 'Tarlan Marcos Dalla Vecchia', telefone: '46999141916', tipo: 'Empréstimo' }
+];
+
+// Os novos cadastros são guardados no próprio navegador
+let meusLivros = [];
+try {
+  meusLivros = JSON.parse(localStorage.getItem('meusLivros') || '[]');
+  if (!Array.isArray(meusLivros)) meusLivros = [];
+} catch (erro) {
+  meusLivros = [];
+}
+
+function mostrarLivros() {
+  const lista = document.getElementById('lista');
+  const pesquisa = document.getElementById('pesquisa').value.toLowerCase();
+  lista.innerHTML = '';
+  const livros = livrosIniciais.concat(meusLivros);
+  let encontrados = 0;
+
+  livros.forEach(function(livro) {
+    if (!livro.titulo.toLowerCase().includes(pesquisa)) return;
+    encontrados++;
+    const div = document.createElement('div');
+    div.className = 'livro';
+    const nome = document.createElement('h3');
+    nome.textContent = livro.titulo;
+    const detalhes = document.createElement('p');
+    detalhes.textContent = livro.tipo + ' - Responsável: ' + livro.pessoa;
+    const contato = document.createElement('a');
+    contato.className = 'botao';
+    contato.textContent = 'Conversar no WhatsApp';
+    const texto = 'Olá! Vi o livro "' + livro.titulo + '" no Compartilha Livros. Gostaria de conversar sobre ' + livro.tipo.toLowerCase() + '.';
+    contato.href = 'https://wa.me/55' + livro.telefone + '?text=' + encodeURIComponent(texto);
+    contato.target = '_blank';
+    contato.rel = 'noopener noreferrer';
+    div.append(nome, detalhes, contato);
+    lista.appendChild(div);
+  });
+  if (encontrados === 0) lista.textContent = 'Nenhum livro encontrado.';
+}
+
+document.getElementById('cadastro').addEventListener('submit', function(evento) {
+  evento.preventDefault();
+  const titulo = document.getElementById('nomeLivro').value.trim();
+  const pessoa = document.getElementById('nomePessoa').value.trim();
+  let telefone = document.getElementById('telefone').value.replace(/\D/g, '');
+  if (telefone.startsWith('55') && telefone.length === 13) telefone = telefone.slice(2);
+  if (!/^\d{10,11}$/.test(telefone)) {
+    document.getElementById('mensagem').textContent = 'Confira o número do WhatsApp com DDD.';
+    return;
+  }
+  meusLivros.push({ titulo: titulo, pessoa: pessoa, telefone: telefone, tipo: document.getElementById('tipo').value });
+  try {
+    localStorage.setItem('meusLivros', JSON.stringify(meusLivros));
+    document.getElementById('mensagem').textContent = 'Livro cadastrado neste navegador!';
+  } catch (erro) {
+    document.getElementById('mensagem').textContent = 'Livro adicionado nesta sessão, mas não foi possível salvar no navegador.';
+  }
+  document.getElementById('cadastro').reset();
+  document.getElementById('pesquisa').value = '';
+  mostrarLivros();
+});
+
+mostrarLivros();
+</script>
+</body>
+</html>
